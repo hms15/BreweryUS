@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<head>
+  <title>Vega Lite Bar Chart</title>
+  <meta charset="utf-8">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vega/3.0.0-rc2/vega.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vega-lite/2.0.0-beta.10/vega-lite.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vega-embed/3.0.0-beta.19/vega-embed.js"></script>
+
+  <style media="screen">
+    /* Add space between Vega-Embed links  */
+    .vega-actions a {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Template for Embedding Vega-Lite Visualization</h1>
+  <!-- Container for the visualization -->
+  <div id="vis"></div>
+
+  <script>
+{
+  "$schema": "https://vega.github.io/schema/vega/v3.0.json",
+  "width": 960,
+  "height": 500,
+  "autosize": "none",
+
+  "data": [
+    // {
+    //   "name": "unemp",
+    //   "url": "data/unemployment.tsv",
+    //   "format": {"type": "tsv", "parse": "auto"}
+    // },
+    {
+      "name": "states",
+      "url": "us-10m.json",
+      "format": {"type": "topojson", "feature": "states"},
+      // "transform": [
+      //   { "type": "lookup", "from": "unemp", "key": "id", "fields": ["id"], "as": ["unemp"] },
+      //   { "type": "filter", "expr": "datum.unemp != null" }
+      // ]
+    }
+  ],
+
+  "projections": [
+    {
+      "name": "projection",
+      "type": "albersUsa"
+    }
+  ],
+
+  "scales": [
+    {
+      "name": "color",
+      "type": "quantize",
+      "domain": [0, 0.15],
+      "range": {"scheme": "blues-9"}
+    }
+  ],
+
+  "legends": [
+    {
+      "fill": "color",
+      "orient": "bottom-right",
+      "title": "Unemployment",
+      "format": "0.1%",
+      "encode": {
+        "symbols": {
+          "update": {
+            "shape": {"value": "square"},
+            "stroke": {"value": "#ccc"},
+            "strokeWidth": {"value": 0.2}
+          }
+        }
+      }
+    }
+  ],
+
+  "marks": [
+    {
+      "type": "shape",
+      "from": {"data": "counties"},
+      "encode": {
+        "enter": { "tooltip": {"signal": "format(datum.unemp.rate, '0.1%')"}},
+        "update": { "fill": {"scale": "color", "field": "unemp.rate"} },
+        "hover": { "fill": {"value": "red"} }
+      },
+      "transform": [
+        { "type": "geoshape", "projection": "projection" }
+      ]
+    }
+  ]
+}
+  </script>
+</body>
+</html>

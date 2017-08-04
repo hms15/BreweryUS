@@ -1,0 +1,17 @@
+{
+  "name": "BreweryUS",
+  "version": "1.0.0",
+  "description": "Brewery Visualization",
+  "dependencies": {
+    "datamaps": "^0.5.8",
+    "gulp": "~3.9.1",
+    "model-js": "^0.2.5",
+    "vega": "^3.0.0-rc4",
+    "vega-embed": "^3.0.0-beta.19",
+    "vega-lite": "^2.0.0-beta.10"
+  },
+  "repository": {
+    "url": "https://github.com/hms15/BreweryUS.git"
+  },
+  "license": "Unlicensed"
+}
