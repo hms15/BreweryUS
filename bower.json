@@ -4,7 +4,10 @@
   "dependencies": {
     "angular": "1.5.x",
     "angular-bootstrap": "~1.2.5",
-    "fullpage.js": "^2.9.4"
+    "vega-tooltip": "*",
+    "topojson": "*",
+    "d3": "*",
+    "d3-transform": "*"
   },
   "resolutions": {
     "angular": "1.4.14"
