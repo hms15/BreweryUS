@@ -152,7 +152,7 @@ var div = d3.select("body")
         .style("opacity", 0);
 
 // Load in my states data!
-d3.csv("brewCount.csv", function(data) {
+d3.csv("BrewCount.csv", function(data) {
   color.domain([
     d3.min(data, function(d) { return d.breweries}),
     d3.max(data, function(d) { return d.breweries})
