@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<head>
+  <title>Breweries</title>
+  <meta charset="utf-8">
+
+  <!-- Bootstrap Core CSS -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link href="css/scrolling-nav.css" rel="stylesheet">
+    
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vega-lite/2.0.0-beta.3/vega-lite.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vega/3.0.0-beta.31/vega.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vega-embed/3.0.0-beta.14/vega-embed.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/vega-tooltip/0.3.3/vega-tooltip.min.css"></link>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vega-tooltip/0.3.3/vega-tooltip.min.js"></script>
+  <script src="//d3js.org/d3.v3.min.js"></script>
+  <script src="//d3js.org/d3.v4.min.js"></script>
+  <script src="https://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+  <script src="//d3js.org/queue.v1.min.js"></script>
+  <script src="https://d3js.org/topojson.v2.min.js"></script>
+<script src="js/jquery.js"></script>
+
+  
+  <style media="screen">
+    /* Add space between Vega-Embed links  */
+    .vega-actions a {
+      margin-right: 5px;
+    }
+    /* On mouse hover, lighten state color */
+path:hover {
+  fill-opacity: .7;
+}
+
+/* Style for Custom Tooltip */
+div.tooltip {   
+  position: absolute;           
+  text-align: center;           
+  width: 75px;                  
+  height: 75px;                 
+  padding: 2px;             
+  font: 12px sans-serif;        
+  background: white;   
+  border: 0px;      
+  border-radius: 8px;           
+  pointer-events: none;         
+}
+        
+/* Legend Font Style */
+body {
+  font: 11px sans-serif;
+}
+        
+/* Legend Position Style */
+.legend {
+  position:absolute;
+  left:1000px;
+  top:550px;
+}
+
+
+  </style>
+
+   
+</head>
+<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header page-scroll">
+                <!-- <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                   
+                </button> -->
+                <a class="navbar-brand page-scroll" href="#page-top">Start Beer Tour</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav">
+                    <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    <li class="hidden">
+                        <a class="page-scroll" href="#page-top"></a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#Brewery">Breweries</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#ABV">ABV</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#IBU">IBU</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#Type">Beer Type</a>
+                    </li>
+                     <!-- <li>
+                        <a class="page-scroll" href="#End">Cheers</a>
+                    </li> -->
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+<!-- Brewery Section -->
+     <section id="brewery" class="about-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1>National Breweries</h1>
+                    <h4>Which State has the Most Breweries?</h4>
+                    <p>If you're a craft beer fan, the US has quite the selection of breweries. Craft breweries have come quite the way from the 1980s when there were fewer than 100 operations in business. As of 2016 end, there were a total of 5005 breweries. As the popularity continues to increase, breweries are becoming prominent in every state. Currently, California ranks the highest in having the most number of breweries.</p>  
+                    <svg width="960" height="500" style="top: 250px; left: 200px; position: absolute;">…</svg>            
+                    <script type="text/javascript">
+//Width and height of map
+var width = 960;
+var height = 500;
+
+
+// D3 Projection
+var projection = d3.geo.albersUsa()
+           .translate([width/2, height/2])    // translate to center of screen
+           .scale([800]);          // scale things down so see entire US
+        
+// Define path generator
+var path = d3.geo.path()               // path generator that will convert GeoJSON to SVG paths
+         .projection(projection);  // tell path generator to use albersUsa projection
+
+    
+// Define linear scale for output
+var color = d3.scale.quantize()
+.range(["rgb(216,144,24)","rgb(240,168,48)", "rgb(240,192,48)", "rgb(250,201,55)"]);
+
+var legendText = ["Higher Rank", "Lower Rank"];
+
+
+//Create SVG element and append map to the SVG
+var svg = d3.select("body")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      $("svg").css({top: 250, left: 200, position:'absolute'});
+     
+// Append Div for tooltip to SVG
+var div = d3.select("body")
+        .append("div")   
+        .attr("class", "tooltip")               
+        .style("opacity", 0);
+
+// Load in my states data!
+d3.csv("brewCount.csv", function(data) {
+  color.domain([
+    d3.min(data, function(d) { return d.breweries}),
+    d3.max(data, function(d) { return d.breweries})
+  ]); // setting the range of the input data
+
+// Load GeoJSON data and merge with states data
+d3.json("us-10m.json", function(json) {
+
+  // Loop through each state data value in the .csv file
+  for (var i = 0; i < data.length; i++) {
+
+    // Grab State Name
+    var dataState = data[i].state;
+
+    // Grab data value 
+    var dataValue = parseFloat(data[i].breweries); 
+
+    var rankValue = parseFloat(data[i].brewRank);
+
+    // Find the corresponding state inside the GeoJSON
+    for (var j = 0; j < json.features.length; j++)  {
+      
+      var jsonState = json.features[j].properties.name;
+  
+      if (dataState == jsonState) {
+
+        // Copy the data value into the JSON
+        json.features[j].properties.value = dataValue; 
+        json.features[j].properties.rank = rankValue;
+
+    // Stop looking through the JSON
+    break;
+    }
+  }
+}
+    
+// Bind the data to the SVG and create one path per GeoJSON feature
+svg.selectAll("path")
+  .data(json.features)
+  .enter()
+  .append("path")
+  .attr("d", path)  
+  .style("fill", function(d) {
+    // Get data value
+    var value = d.properties.rank;    
+
+    if (value) {
+      //If value exists…
+      return color(value);
+    } else {
+      //If value is undefined…
+      return "#ffffff";
+    }
+  })
+  .on("mouseover", function(d) {      
+      div.transition()        
+           .duration(200)      
+           .style("opacity", .9);      
+           div.text("State: " + d.properties.name + " Count: " + d.properties.value+ " Rank: " + d.properties.rank)
+           .style("left", (d3.event.pageX) + "px")     
+           .style("top", (d3.event.pageY - 28) + "px");    
+  })   
+
+    // fade out tooltip on mouse out               
+    .on("mouseout", function(d) {       
+        div.transition()        
+           .duration(500)      
+           .style("opacity", 0);   
+    });
+    var legend = d3.select("body").append("svg")
+          .attr("class", "legend")
+          .attr("width", 140)
+          .attr("height", 200)
+          .selectAll("g")
+          .data(color.domain().slice().reverse())
+          .enter()
+          .append("g")
+          .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color);
+
+    legend.append("text")
+        .data(legendText)
+          .attr("x", 24)
+          .attr("y", 9)
+          .attr("dy", ".35em")
+          .text(function(d) { return d; });
+  });
+
+});
+
+</script>
+
+                </div>
+            </div>
+        </div>
+        <a class="btn btn-default page-scroll" href="#ABV">Next</a>
+    </section>  
+
+    <!-- ABV Section -->
+    <section id="ABV" class="about-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">            
+          
+  <h1 align="center">Getting Drunk?</h1>
+  <!-- Container for the visualization -->
+  <p style="" align="center">Alcohol by volume (ABV) is the standard measure of how much alcohol is contained in a given volume. Beer typically has anywhere from 2-12% ABV. Brewers use the following formula ABV = 131.25(Starting SG - Final SG). Specific Gravity (SG) is the ratio of the density of a sample to the density of water.</p>
+  <div id="vis2" align="center"></div>
+  
+
+  <script>
+  // Assign the specification to a local variable vlSpec.
+  var v2Spec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+    "width": 800,
+    "height": 300,
+    "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+    "data": {"url": "brewMap.json"},
+    "mark": "circle",
+    "encoding": {
+      "y": {"field": "abv", "type": "quantitative"},
+      "x": {"field": "ounces", "type": "quantitative"},
+      "color": {"value": "#C04800"},
+      "size": {"value": 200}
+      
+    }
+  };
+
+  // Embed the visualization in the container with id `vis`
+   var opt = {
+      mode: "vega-lite",
+      actions: false
+    };
+    vega.embed("#vis2", v2Spec, opt, function (error, result) {
+      var tooltipOption = {
+        showAllFields: false,
+        fields: [
+          { field: "abv" },
+          { field: "ounces" },
+          { field: "beer", title: "beer" }
+        ]
+      };
+      vegaTooltip.vegaLite(result.view, v2Spec, tooltipOption);
+    });
+  </script>
+  </div>
+        </div>
+        
+      </div>
+      <!-- <div align="center">
+    <a class="btn btn-default page-scroll" href="#IBU">Next</a>
+  </div> -->
+    </section>
+
+    <!-- IBU Section -->
+    <section id="IBU">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">            
+          
+  <h1 align="center">Are you Bitter?</h1>
+  <!-- Container for the visualization -->
+  <p style="" align="center">International Bitterness Unit (IBU) is an empiracle measurement of isohumulone. Isohumulone is a chemical derived from hops which makes a beer taste bitter. IBU can range anywhere from 0 to infinitity as it is the brewers discretion how bitter the beer should be. However, it's typical for a beer to have an IBU value of 5 to 120. Commercial breweries measure IBU as a quality control tool to ensure that each batch of beer that is brewed will have the same taste. As you become familiar with IBU counts, you can start to find the zone you generally prefer, and help build your own beer palate.</p>
+  <div id="vis3" align="center"></div>
+  
+
+  <script>
+  // Assign the specification to a local variable vlSpec.
+  var v3Spec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+    "width": 500,
+    "height": 800,
+    "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+    "data": {"url": "brewMap.json"},
+    "mark": "bar",
+    "encoding": {
+      "y": {"field": "style", "type": "ordinal"},
+      "x": {"field": "ibu", "type": "quantitative"},        
+      "size": {"value": 100},
+      "color": {"value": "#D87800"}
+    }
+    
+  };
+
+  // Embed the visualization in the container with id `vis`
+   var opt = {
+      mode: "vega-lite",
+      actions: false
+    };
+    vega.embed("#vis3", v3Spec, opt, function (error, result) {
+      var tooltipOption = {
+        showAllFields: false,
+        fields: [
+          { field: "ibu" },
+          { field: "style" }
+        ]
+      };
+      vegaTooltip.vegaLite(result.view, v3Spec, tooltipOption);
+    });
+  </script>
+  </div>
+        </div>
+        
+      </div>
+      <!-- <div align="center">
+    <a class="btn btn-default page-scroll" href="#Type">Next</a>
+  </div> -->
+    </section>
+
+     <!-- Beer Type Section -->
+        <section id="Type">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">            
+          
+  <h1 align="center">Beer Types</h1>
+
+  <!-- Container for the visualization -->
+  <p align="center">There are many different types of beer such as IPAs, sours, begians, pale ales, stouts, porter etc. As shown below, American IPA ranks the highest with the most number of beers in this style.</p>
+  <div id="vis4" align="center"></div>
+
+  <script>
+  var v4Spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+  "description": "A simple bar chart with embedded data.",
+  "data": {"url": "styleCount.csv"},
+  "mark": "bar",
+  "encoding": {
+    "x": {"field": "Style", "type": "ordinal"},
+    "y": {"field": "BeerCount", "type": "quantitative"},
+    "color": {"value": "#301800"}
+  }
+}
+// Embed the visualization in the container with id `vis`
+   var opt = {
+      mode: "vega-lite",
+      actions: false
+    };
+    vega.embed("#vis4", v4Spec, opt, function (error, result) {
+      var tooltipOption = {
+        showAllFields: false,
+        fields: [
+          { field: "Style" },
+          { field: "BeerCount" }
+        ]
+      };
+      vegaTooltip.vegaLite(result.view, v4Spec, tooltipOption);
+    });
+  </script>
+  </div>
+        </div>
+        
+      </div>
+     <!--  <div align="center">
+    <a class="btn btn-default page-scroll" href="#End">Next</a>
+  </div> -->
+    </section>
+
+     <!-- jQuery -->
+    
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Scrolling Nav JavaScript -->
+    <script src="js/jquery.easing.min.js"></script>
+    <script src="js/scrolling-nav.js"></script>
+
+</body>
+</html>
